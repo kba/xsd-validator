@@ -17,8 +17,16 @@
  */
 package xsdvalidator;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.StringWriter;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -26,6 +34,7 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -54,17 +63,26 @@ public class validate {
             
 
         File XSDFile = new File(mXSDFileName);
-        File XMLFile = new File(mXMLFileName); 
+        InputStream XMLFile = null;
+        System.err.println("mXSDFilename: " + mXSDFileName);
+        System.err.println("mXMLFilename: " + mXMLFileName);
+		try
+		{
+			XMLFile = mXMLFileName.equals("-") 
+					? System.in : new FileInputStream(mXMLFileName);
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+			System.exit(1);
+		} 
         
         try {
             Schema schema = factory.newSchema(XSDFile);
             Validator validator = schema.newValidator();
 
-            Source source = new StreamSource(XMLFile);
-
 
             try {
-                validator.validate(source);
+                validator.validate(new StreamSource(XMLFile));
                 System.out.println(mXMLFileName + " validates");
             }
             catch (SAXParseException ex) {
